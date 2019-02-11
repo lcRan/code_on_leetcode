@@ -1,0 +1,66 @@
+server {
+	# 443
+	listen 443;
+	server name www.bagewa.com;
+	
+	ssl on;
+    # root html;
+    # index index.html index.htm;
+    ssl certificate   cert/214941811750247.pem;
+    ssl certificate key  cert/214941811750247.key;
+    ssl session timeout 5m;
+    ssl ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE:ECDH:AES:HIGH:!NULL:!aNULL:!MD5:!ADH:!RC4;
+    ssl protocols TLSv1 TLSv1.1 TLSv1.2;
+    ssl prefer server_ciphers on;
+	
+	location /mpApp/ {
+		include proxy_params;
+		proxy pass http://unix:/srv/banquetexpert.sock;
+        proxy read_timeout 500s;
+        client max body size 100m;
+
+        proxy http_version 1.1;
+        proxy set header Upgrade $http_upgrade;
+        proxy set header Connection "upgrade";
+        fastcgi param  SCRIPT_NAME        "";
+	}
+	
+	location /ws/ {
+		proxy pass http://127.0.0.1:8880/;
+		proxy read timeout 57600s;
+		proxy set header Host $host;
+		proxy set header X-Real-IP $remote_addr;
+		proxy set header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy http version 1.1;
+		proxy set header Upgrade $http_upgrade;
+		proxy set header Connection "upgrade";
+	}
+	
+	location /webApp/ {
+		include proxy_params;
+		proxy pass http://unix:/var/www/banquetexpert.sock;
+        proxy read timeout 500s;
+        client max body size 100m;
+
+        proxy http version 1.1;
+        proxy set header Upgrade $http_upgrade;
+        proxy set header Connection "upgrade";
+        fastcgi param  SCRIPT_NAME        "";
+	}
+	
+	location / {
+        index homePage.html;
+        alias /var/www/banquetExpert/static/homepage/;
+    }
+	
+
+    location /uploaded/ {
+        alias /var/www/banquetExpert/uploaded/;
+    }
+
+    location /static/ {
+        index login.html;
+        alias /var/www/banquetExpert/static/;
+    }
+	
+}
